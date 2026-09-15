@@ -1,0 +1,345 @@
+{
+  "info": {
+    "name": "RikkeiBank API",
+    "description": "Full collection for the RikkeiBank microservices banking platform, routed through the API Gateway (localhost:8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "gateway", "value": "http://localhost:8080" },
+    { "key": "accessToken", "value": "" },
+    { "key": "adminAccessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Identity Service (Auth)",
+      "item": [
+        {
+          "name": "Login - customer1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"customer1\",\n  \"password\": \"customer123\"\n}"
+            },
+            "url": "{{gateway}}/api/identity/auth/login"
+          }
+        },
+        {
+          "name": "Login - admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('adminAccessToken', data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": "{{gateway}}/api/identity/auth/login"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{gateway}}/api/identity/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout (self)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/identity/auth/logout"
+          }
+        },
+        {
+          "name": "Force Logout (ADMIN revokes a user)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"customer1\"\n}" },
+            "url": "{{gateway}}/api/identity/auth/force-logout"
+          }
+        },
+        {
+          "name": "Register new user (ADMIN creates account)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"teller2\",\n  \"password\": \"teller123\",\n  \"role\": \"TELLER\",\n  \"referenceId\": 2\n}"
+            },
+            "url": "{{gateway}}/api/identity/auth/register"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Customer Service (Catalog)",
+      "item": [
+        {
+          "name": "List Customers (ADMIN/TELLER)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/customers"
+          }
+        },
+        {
+          "name": "Get Customer by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/customers/1"
+          }
+        },
+        {
+          "name": "Create Customer (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Pham Van C\",\n  \"idNumber\": \"001099099999\",\n  \"email\": \"customer3@rikkeibank.vn\",\n  \"phone\": \"0900000003\",\n  \"address\": \"Da Nang\"\n}"
+            },
+            "url": "{{gateway}}/api/customers"
+          }
+        },
+        {
+          "name": "Update Customer (ADMIN)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nguyen Van A (updated)\",\n  \"idNumber\": \"001099012345\",\n  \"email\": \"customer1@rikkeibank.vn\",\n  \"phone\": \"0900000001\",\n  \"address\": \"Ha Noi\"\n}"
+            },
+            "url": "{{gateway}}/api/customers/1"
+          }
+        },
+        {
+          "name": "Delete Customer (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/customers/3"
+          }
+        },
+        {
+          "name": "List Staff (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/staff"
+          }
+        },
+        {
+          "name": "Create Staff (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Hoang Thi Teller2\",\n  \"username\": \"teller2\",\n  \"branch\": \"Chi nhanh Cau Giay\",\n  \"role\": \"TELLER\"\n}"
+            },
+            "url": "{{gateway}}/api/staff"
+          }
+        },
+        {
+          "name": "List Account Types",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/account-types"
+          }
+        },
+        {
+          "name": "Create Account Type (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FIXED\",\n  \"name\": \"Tai khoan tiet kiem co ky han\",\n  \"interestRate\": 6.5,\n  \"description\": \"Fixed-term deposit\"\n}"
+            },
+            "url": "{{gateway}}/api/account-types"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Account Service",
+      "item": [
+        {
+          "name": "List All Accounts (ADMIN/TELLER)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/accounts"
+          }
+        },
+        {
+          "name": "Get Account by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/accounts/1"
+          }
+        },
+        {
+          "name": "Get Accounts by customerId",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/accounts/customer/1"
+          }
+        },
+        {
+          "name": "Create Account (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"accountTypeId\": 2,\n  \"initialBalance\": 2000000\n}"
+            },
+            "url": "{{gateway}}/api/accounts"
+          }
+        },
+        {
+          "name": "Delete Account (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/accounts/3"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Transaction Service (Saga + Circuit Breaker)",
+      "item": [
+        {
+          "name": "Transfer money (Saga: debit -> credit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromAccountId\": 1,\n  \"toAccountId\": 2,\n  \"amount\": 500000\n}"
+            },
+            "url": "{{gateway}}/api/transactions/transfer"
+          }
+        },
+        {
+          "name": "Get Transaction by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/transactions/1"
+          }
+        },
+        {
+          "name": "Daily Transactions (TELLER)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/transactions/daily"
+          }
+        },
+        {
+          "name": "My Transaction History (CUSTOMER)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/transactions/customer/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Notification Service (Kafka Consumer results)",
+      "item": [
+        {
+          "name": "My Notifications (CUSTOMER)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{gateway}}/api/notifications/customer/1"
+          }
+        },
+        {
+          "name": "All Notifications (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }],
+            "url": "{{gateway}}/api/notifications"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Infrastructure Health Checks",
+      "item": [
+        { "name": "Eureka Dashboard", "request": { "method": "GET", "url": "http://localhost:8761" } },
+        { "name": "Config Server - identity-service config", "request": { "method": "GET", "url": "http://localhost:8888/identity-service/default" } },
+        { "name": "Gateway Actuator Health", "request": { "method": "GET", "url": "{{gateway}}/actuator/health" } },
+        { "name": "Account Service Circuit Breaker state", "request": { "method": "GET", "url": "http://localhost:8084/actuator/circuitbreakers" } }
+      ]
+    }
+  ]
+}

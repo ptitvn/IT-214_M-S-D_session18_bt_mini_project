@@ -1,0 +1,33 @@
+# Common configuration shared by ALL microservices (Spring Cloud Config - centralized config)
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    com.rikkeibank: DEBUG
+
+jwt:
+  secret: "RikkeiBankSuperSecretKeyForJWTSigning-ChangeMeInProduction-2026!!"
+  access-token-expiration-ms: 900000        # 15 minutes
+  refresh-token-expiration-ms: 2592000000   # 30 days (long-lived session for CUSTOMER seamless UX)
